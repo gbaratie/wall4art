@@ -1,0 +1,75 @@
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { api } from '@/lib/types';
+import { Badge, Card } from '@/components/ui';
+import { LocationMap } from '@/components/LocationMap';
+
+export function ExplorePage() {
+  const { user } = useAuth();
+  const profile = user?.profile;
+
+  const { data: locations = [], isLoading } = useQuery({
+    queryKey: ['locations', 'explore', profile?.latitude, profile?.longitude],
+    queryFn: () =>
+      api.getLocations({
+        status: 'OPEN',
+        latitude: profile?.latitude ?? 48.8566,
+        longitude: profile?.longitude ?? 2.3522,
+        radiusKm: profile?.searchRadiusKm ?? 50,
+      }),
+    enabled: !!user,
+  });
+
+  if (!user) {
+    return <Card>Connectez-vous en tant qu&apos;artiste pour explorer les lieux.</Card>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Explorer les lieux</h1>
+        <p className="mt-2 text-slate-600">
+          Lieux ouverts dans un rayon de {profile?.searchRadiusKm ?? 50} km
+          {profile?.city ? ` autour de ${profile.city}` : ''}.
+        </p>
+      </div>
+
+      <LocationMap
+        locations={locations}
+        center={[profile?.latitude ?? 48.8566, profile?.longitude ?? 2.3522]}
+      />
+
+      {isLoading ? (
+        <p>Chargement...</p>
+      ) : locations.length === 0 ? (
+        <Card>
+          <p className="text-slate-600">Aucun lieu ouvert dans votre zone pour le moment.</p>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {locations.map((loc) => (
+            <Card key={loc.id}>
+              <img
+                src={loc.photoUrl}
+                alt={loc.title}
+                className="mb-4 h-40 w-full rounded-lg object-cover"
+              />
+              <div className="flex items-start justify-between gap-2">
+                <h2 className="text-lg font-semibold">{loc.title}</h2>
+                <Badge tone="brand">{loc.kind}</Badge>
+              </div>
+              <p className="mt-2 text-sm text-slate-600">{loc.city}</p>
+              {loc.distanceKm != null && (
+                <p className="text-sm text-slate-500">{loc.distanceKm.toFixed(1)} km</p>
+              )}
+              <Link to={`/locations/${loc.id}`} className="mt-4 inline-block text-sm text-brand-600">
+                Voir et proposer →
+              </Link>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

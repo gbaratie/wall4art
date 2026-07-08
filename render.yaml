@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: wall4art-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: pnpm install && pnpm --filter @wall4art/shared build && pnpm --filter @wall4art/api db:generate && pnpm --filter @wall4art/api db:migrate:deploy && pnpm --filter @wall4art/api build
+    startCommand: pnpm --filter @wall4art/api start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: BETTER_AUTH_SECRET
+        generateValue: true
+      - key: BETTER_AUTH_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false

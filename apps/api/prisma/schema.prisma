@@ -1,0 +1,216 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+enum UserRole {
+  PARTICULIER
+  MAIRE
+  ARTISTE
+  ADMIN
+}
+
+enum LocationKind {
+  PRIVATE
+  PUBLIC
+}
+
+enum MayorValidationStatus {
+  NOT_REQUIRED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LocationStatus {
+  DRAFT
+  PENDING_VALIDATION
+  OPEN
+  MATCHED
+  CLOSED
+}
+
+enum ProposalStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  name          String
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  roles         UserRoleAssignment[]
+  profile       Profile?
+  accounts      Account[]
+  sessions      Session[]
+
+  hostedLocations       Location[]         @relation("LocationHost")
+  mayorValidatedLocations Location[]       @relation("MayorValidator")
+  proposals             ArtworkProposal[]
+  sentMessages          Message[]
+  conversationsAsHost   Conversation[]     @relation("ConversationHost")
+  conversationsAsArtist Conversation[]     @relation("ConversationArtist")
+}
+
+model UserRoleAssignment {
+  id     String   @id @default(uuid())
+  userId String
+  role   UserRole
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+}
+
+model Profile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  bio             String?
+  city            String?
+  latitude        Float?
+  longitude       Float?
+  searchRadiusKm  Int      @default(50)
+  portfolioLinks  Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String   @id @default(uuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  idToken               String?
+  password              String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([identifier, value])
+}
+
+model Location {
+  id                      String                @id @default(uuid())
+  hostId                  String
+  title                   String
+  description             String
+  expectedOutcome         String
+  kind                    LocationKind
+  requiresMayorValidation Boolean               @default(false)
+  mayorValidationStatus   MayorValidationStatus @default(NOT_REQUIRED)
+  mayorValidatedById      String?
+  mayorValidatedAt        DateTime?
+  mayorComment            String?
+  address                 String
+  city                    String
+  postalCode              String
+  latitude                Float
+  longitude               Float
+  photoUrl                String
+  status                  LocationStatus        @default(DRAFT)
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+
+  host           User              @relation("LocationHost", fields: [hostId], references: [id])
+  mayorValidator User?             @relation("MayorValidator", fields: [mayorValidatedById], references: [id])
+  proposals      ArtworkProposal[]
+  conversations  Conversation[]
+
+  @@index([status, kind])
+  @@index([hostId])
+}
+
+model ArtworkProposal {
+  id                    String         @id @default(uuid())
+  artistId              String
+  locationId            String
+  title                 String
+  description           String
+  commitments           String
+  estimatedDurationDays Int
+  sketchUrl             String?
+  fundingRequested      Boolean        @default(false)
+  fundingAmount         Float?
+  fundingDescription    String?
+  status                ProposalStatus @default(DRAFT)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  artist   User     @relation(fields: [artistId], references: [id])
+  location Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@index([locationId, status])
+  @@index([artistId])
+}
+
+model Conversation {
+  id         String   @id @default(uuid())
+  locationId String
+  hostId     String
+  artistId   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  location Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  host     User      @relation("ConversationHost", fields: [hostId], references: [id])
+  artist   User      @relation("ConversationArtist", fields: [artistId], references: [id])
+  messages Message[]
+
+  @@unique([locationId, artistId])
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  conversationId String
+  senderId       String
+  content        String
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId, createdAt])
+}
