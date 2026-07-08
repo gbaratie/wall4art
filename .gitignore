@@ -9,3 +9,5 @@ coverage
 .turbo
 *.tsbuildinfo
 apps/api/prisma/migrations/**/migration_lock.toml
+playwright-report
+test-results
