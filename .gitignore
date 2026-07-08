@@ -7,4 +7,5 @@ build
 .DS_Store
 coverage
 .turbo
+*.tsbuildinfo
 apps/api/prisma/migrations/**/migration_lock.toml
