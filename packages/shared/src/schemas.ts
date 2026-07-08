@@ -68,9 +68,15 @@ export const createProposalSchema = z.object({
   description: z.string().min(10).max(5000),
   commitments: z.string().min(10).max(3000),
   estimatedDurationDays: z.number().int().min(1).max(365),
-  sketchUrl: z.string().url().optional(),
+  sketchUrl: z.preprocess(
+    (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+    z.string().url().optional(),
+  ),
   fundingRequested: z.boolean().default(false),
-  fundingAmount: z.number().positive().optional(),
+  fundingAmount: z.preprocess(
+    (value) => (value === 0 || value === '' || value == null ? undefined : value),
+    z.number().positive().optional(),
+  ),
   fundingDescription: z.string().max(2000).optional(),
   submit: z.boolean().default(true),
 });

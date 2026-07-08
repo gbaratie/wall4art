@@ -48,7 +48,19 @@ export function LocationDetailPage() {
   });
 
   const proposalMutation = useMutation({
-    mutationFn: () => api.createProposal(id!, proposal),
+    mutationFn: () => {
+      const { sketchUrl, fundingAmount, fundingDescription, ...rest } = proposal;
+      return api.createProposal(id!, {
+        ...rest,
+        ...(sketchUrl ? { sketchUrl } : {}),
+        ...(rest.fundingRequested
+          ? {
+              fundingAmount: fundingAmount || undefined,
+              fundingDescription: fundingDescription || undefined,
+            }
+          : { fundingRequested: false }),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['location', id] });
       queryClient.invalidateQueries({ queryKey: ['proposals', 'mine'] });
