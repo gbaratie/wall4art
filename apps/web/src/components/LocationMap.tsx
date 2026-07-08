@@ -22,7 +22,7 @@ export function LocationMap({
   zoom?: number;
 }) {
   return (
-    <div className="h-80 overflow-hidden rounded-xl border border-slate-200">
+    <div className="h-56 overflow-hidden rounded-xl border border-slate-200 sm:h-64 md:h-80">
       <MapContainer center={center} zoom={zoom} className="h-full w-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'

@@ -9,7 +9,7 @@ export function Button({
   return (
     <button
       className={cn(
-        'rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-50',
+        'rounded-lg px-4 py-2.5 text-sm font-medium transition disabled:opacity-50 sm:py-2',
         variant === 'primary' && 'bg-brand-600 text-white hover:bg-brand-700',
         variant === 'secondary' && 'border border-slate-200 bg-white hover:bg-slate-50',
         variant === 'danger' && 'bg-red-600 text-white hover:bg-red-700',
@@ -28,7 +28,7 @@ export function Card({
   className?: string;
 }) {
   return (
-    <div className={cn('rounded-2xl border border-slate-200 bg-white p-6 shadow-sm', className)}>
+    <div className={cn('rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6', className)}>
       {children}
     </div>
   );

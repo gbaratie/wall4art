@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft } from 'lucide-react';
 import { api } from '@/lib/types';
 import { useAuth } from '@/context/AuthContext';
 import { Button, Card, Input } from '@/components/ui';
@@ -39,11 +40,12 @@ export function MessagesPage() {
   }
 
   const selected = conversations.find((c) => c.id === selectedId);
+  const showListOnMobile = !selectedId;
 
   return (
     <div className="grid gap-4 lg:grid-cols-3">
-      <Card className="lg:col-span-1">
-        <h1 className="text-xl font-bold">Conversations</h1>
+      <Card className={`lg:col-span-1 ${!showListOnMobile ? 'hidden lg:block' : ''}`}>
+        <h1 className="text-xl font-bold sm:text-2xl">Conversations</h1>
         <div className="mt-4 space-y-2">
           {conversations.length === 0 && (
             <p className="text-sm text-slate-500">Aucune conversation pour le moment.</p>
@@ -65,12 +67,22 @@ export function MessagesPage() {
         </div>
       </Card>
 
-      <Card className="flex min-h-[28rem] flex-col lg:col-span-2">
+      <Card
+        className={`flex min-h-[20rem] flex-col sm:min-h-[24rem] lg:col-span-2 lg:min-h-[28rem] ${showListOnMobile ? 'hidden lg:flex' : ''}`}
+      >
         {!selected ? (
           <p className="text-slate-500">Sélectionnez une conversation.</p>
         ) : (
           <>
             <div className="border-b border-slate-100 pb-4">
+              <button
+                type="button"
+                onClick={() => setSelectedId(null)}
+                className="mb-2 flex items-center gap-1 text-sm text-brand-600 lg:hidden"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Retour
+              </button>
               <h2 className="font-semibold">{selected.location.title}</h2>
               <p className="text-sm text-slate-500">
                 {user.id === selected.hostId ? selected.artist.name : selected.host.name}
@@ -80,7 +92,7 @@ export function MessagesPage() {
               {messages.map((m) => (
                 <div
                   key={m.id}
-                  className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
+                  className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm sm:max-w-[80%] ${
                     m.sender.id === user.id
                       ? 'ml-auto bg-brand-600 text-white'
                       : 'bg-slate-100 text-slate-800'
@@ -92,7 +104,7 @@ export function MessagesPage() {
               ))}
             </div>
             <form
-              className="mt-4 flex gap-2"
+              className="mt-4 flex flex-col gap-2 sm:flex-row"
               onSubmit={(e) => {
                 e.preventDefault();
                 if (!content.trim()) return;
@@ -103,8 +115,9 @@ export function MessagesPage() {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Votre message..."
+                className="flex-1"
               />
-              <Button type="submit" disabled={sendMutation.isPending}>
+              <Button type="submit" disabled={sendMutation.isPending} className="shrink-0 sm:w-auto">
                 Envoyer
               </Button>
             </form>
