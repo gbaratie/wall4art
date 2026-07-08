@@ -53,8 +53,8 @@ export function CreateLocationPage() {
   };
 
   return (
-    <Card className="max-w-2xl">
-      <h1 className="text-2xl font-bold">Proposer un lieu à décorer</h1>
+    <Card className="mx-auto max-w-2xl">
+      <h1 className="text-xl font-bold sm:text-2xl">Proposer un lieu à décorer</h1>
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
           <Label>Titre</Label>
@@ -145,11 +145,11 @@ export function CreateLocationPage() {
           <Label>Photo du lieu</Label>
           <Input type="file" accept="image/*" onChange={handlePhoto} />
           {photoUrl && (
-            <img src={photoUrl} alt="Aperçu" className="mt-2 h-40 rounded-lg object-cover" />
+            <img src={photoUrl} alt="Aperçu" className="mt-2 h-40 w-full rounded-lg object-cover sm:w-auto" />
           )}
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading} className="w-full sm:w-auto">
           {loading ? 'Publication...' : 'Publier le lieu'}
         </Button>
       </form>

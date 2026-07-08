@@ -96,10 +96,10 @@ export function LocationDetailPage() {
       <img
         src={location.photoUrl}
         alt={location.title}
-        className="h-64 w-full rounded-2xl object-cover"
+        className="h-48 w-full rounded-xl object-cover sm:h-56 sm:rounded-2xl md:h-64"
       />
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="text-3xl font-bold">{location.title}</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">{location.title}</h1>
         <Badge>{location.status}</Badge>
         <Badge tone="brand">{location.kind}</Badge>
       </div>
@@ -125,9 +125,15 @@ export function LocationDetailPage() {
             value={mayorComment}
             onChange={(e) => setMayorComment(e.target.value)}
           />
-          <div className="mt-4 flex gap-2">
-            <Button onClick={() => mayorMutation.mutate({ action: 'approve' })}>Approuver</Button>
-            <Button variant="danger" onClick={() => mayorMutation.mutate({ action: 'reject' })}>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <Button onClick={() => mayorMutation.mutate({ action: 'approve' })} className="w-full sm:w-auto">
+              Approuver
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => mayorMutation.mutate({ action: 'reject' })}
+              className="w-full sm:w-auto"
+            >
               Rejeter
             </Button>
           </div>
@@ -219,11 +225,16 @@ export function LocationDetailPage() {
                 <Label>Croquis (optionnel)</Label>
                 <Input type="file" accept="image/*" onChange={handleSketch} />
               </div>
-              <div className="flex gap-2">
-                <Button type="submit" disabled={proposalMutation.isPending}>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button type="submit" disabled={proposalMutation.isPending} className="w-full sm:w-auto">
                   Envoyer
                 </Button>
-                <Button variant="secondary" type="button" onClick={() => setShowProposalForm(false)}>
+                <Button
+                  variant="secondary"
+                  type="button"
+                  onClick={() => setShowProposalForm(false)}
+                  className="w-full sm:w-auto"
+                >
                   Annuler
                 </Button>
               </div>
@@ -249,23 +260,26 @@ export function LocationDetailPage() {
                     <Badge>{p.status}</Badge>
                   </div>
                   <p className="mt-2 text-sm text-slate-600">{p.description}</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <Button
                       variant="secondary"
                       onClick={() =>
                         statusMutation.mutate({ proposalId: p.id, status: 'UNDER_REVIEW' })
                       }
+                      className="w-full sm:w-auto"
                     >
                       En revue
                     </Button>
                     <Button
                       onClick={() => statusMutation.mutate({ proposalId: p.id, status: 'ACCEPTED' })}
+                      className="w-full sm:w-auto"
                     >
                       Accepter
                     </Button>
                     <Button
                       variant="danger"
                       onClick={() => statusMutation.mutate({ proposalId: p.id, status: 'REJECTED' })}
+                      className="w-full sm:w-auto"
                     >
                       Rejeter
                     </Button>

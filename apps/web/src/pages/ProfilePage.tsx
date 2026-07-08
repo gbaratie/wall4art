@@ -47,8 +47,8 @@ export function ProfilePage() {
   }
 
   return (
-    <Card className="max-w-2xl">
-      <h1 className="text-2xl font-bold">Mon profil</h1>
+    <Card className="mx-auto max-w-2xl">
+      <h1 className="text-xl font-bold sm:text-2xl">Mon profil</h1>
       <p className="mt-1 text-sm text-slate-500">{user.email}</p>
       <form
         onSubmit={(e) => {
@@ -140,7 +140,7 @@ export function ProfilePage() {
           </>
         )}
 
-        <Button type="submit" disabled={mutation.isPending}>
+        <Button type="submit" disabled={mutation.isPending} className="w-full sm:w-auto">
           {mutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
         </Button>
         {mutation.isSuccess && (

@@ -30,18 +30,18 @@ export function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Bonjour, {user.name}</h1>
-        <p className="mt-2 text-slate-600">
+        <h1 className="text-2xl font-bold sm:text-3xl">Bonjour, {user.name}</h1>
+        <p className="mt-2 text-sm text-slate-600 sm:text-base">
           Rôles : {user.roles.map((r) => r.toLowerCase()).join(', ')}
         </p>
       </div>
 
       {user.roles.includes('PARTICULIER') && (
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Mes lieux</h2>
-            <Link to="/locations/new">
-              <Button>Nouveau lieu</Button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-lg font-semibold sm:text-xl">Mes lieux</h2>
+            <Link to="/locations/new" className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto">Nouveau lieu</Button>
             </Link>
           </div>
           {myLocations.length === 0 ? (
@@ -69,7 +69,7 @@ export function DashboardPage() {
 
       {user.roles.includes('MAIRE') && (
         <section className="space-y-4">
-          <h2 className="text-xl font-semibold">Lieux en attente de validation</h2>
+          <h2 className="text-lg font-semibold sm:text-xl">Lieux en attente de validation</h2>
           {pendingMayor.length === 0 ? (
             <Card>
               <p className="text-slate-600">Aucune demande en attente.</p>
@@ -92,10 +92,12 @@ export function DashboardPage() {
 
       {user.roles.includes('ARTISTE') && (
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Mes propositions</h2>
-            <Link to="/explore">
-              <Button variant="secondary">Explorer les lieux</Button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-lg font-semibold sm:text-xl">Mes propositions</h2>
+            <Link to="/explore" className="w-full sm:w-auto">
+              <Button variant="secondary" className="w-full sm:w-auto">
+                Explorer les lieux
+              </Button>
             </Link>
           </div>
           {myProposals.length === 0 ? (

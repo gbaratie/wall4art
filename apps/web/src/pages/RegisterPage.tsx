@@ -51,7 +51,7 @@ export function RegisterPage() {
 
   return (
     <Card className="mx-auto max-w-lg">
-      <h1 className="text-2xl font-bold">Inscription</h1>
+      <h1 className="text-xl font-bold sm:text-2xl">Inscription</h1>
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
           <Label>Nom</Label>

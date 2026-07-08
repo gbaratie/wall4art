@@ -28,8 +28,8 @@ export function ExplorePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Explorer les lieux</h1>
-        <p className="mt-2 text-slate-600">
+        <h1 className="text-2xl font-bold sm:text-3xl">Explorer les lieux</h1>
+        <p className="mt-2 text-sm text-slate-600 sm:text-base">
           Lieux ouverts dans un rayon de {profile?.searchRadiusKm ?? 50} km
           {profile?.city ? ` autour de ${profile.city}` : ''}.
         </p>

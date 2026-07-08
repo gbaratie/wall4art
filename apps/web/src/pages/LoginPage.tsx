@@ -34,7 +34,7 @@ export function LoginPage() {
 
   return (
     <Card className="mx-auto max-w-md">
-      <h1 className="text-2xl font-bold">Connexion</h1>
+      <h1 className="text-xl font-bold sm:text-2xl">Connexion</h1>
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
           <Label>Email</Label>
