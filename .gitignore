@@ -1,8 +1,22 @@
 node_modules
 dist
 build
+
+# Secrets & local env (keep .env.example tracked as template)
 .env
+.env.*
+!.env.example
 .env.local
+
+# Editor / tool config (may contain tokens or local paths)
+.cursor/
+
+# Keys & certificates
+*.pem
+*.key
+*.p12
+*.pfx
+
 *.log
 .DS_Store
 coverage
