@@ -7,6 +7,7 @@ import {
 } from '@wall4art/shared';
 import { prisma } from '../lib/prisma.js';
 import { haversineKm, resolveLocationStatus } from '../lib/location-utils.js';
+import { geocodeAddress, geocodeCity } from '../lib/geocoding.js';
 import { getSessionUser, requireAuth, requireRole } from '../lib/session.js';
 
 const locationSelect = {
@@ -45,6 +46,12 @@ export async function locationRoutes(app: FastifyInstance) {
       requiresMayorValidation: body.requiresMayorValidation,
     });
 
+    const geocoded = await geocodeAddress({
+      address: body.address,
+      city: body.city,
+      postalCode: body.postalCode,
+    });
+
     const location = await prisma.location.create({
       data: {
         hostId: user.id,
@@ -54,11 +61,11 @@ export async function locationRoutes(app: FastifyInstance) {
         kind: body.kind,
         requiresMayorValidation: body.requiresMayorValidation,
         mayorValidationStatus,
-        address: body.address,
-        city: body.city,
-        postalCode: body.postalCode,
-        latitude: body.latitude,
-        longitude: body.longitude,
+        address: geocoded.address,
+        city: geocoded.city,
+        postalCode: geocoded.postalCode,
+        latitude: geocoded.latitude,
+        longitude: geocoded.longitude,
         photoUrl: body.photoUrl,
         status,
       },
@@ -88,13 +95,22 @@ export async function locationRoutes(app: FastifyInstance) {
       orderBy: { createdAt: 'desc' },
     });
 
-    if (query.latitude != null && query.longitude != null && query.radiusKm != null) {
+    let searchLatitude = query.latitude;
+    let searchLongitude = query.longitude;
+
+    if ((searchLatitude == null || searchLongitude == null) && query.city) {
+      const coords = await geocodeCity(query.city);
+      searchLatitude = coords.latitude;
+      searchLongitude = coords.longitude;
+    }
+
+    if (searchLatitude != null && searchLongitude != null && query.radiusKm != null) {
       locations = locations
         .map((loc) => ({
           ...loc,
           distanceKm: haversineKm(
-            query.latitude!,
-            query.longitude!,
+            searchLatitude!,
+            searchLongitude!,
             loc.latitude,
             loc.longitude,
           ),
@@ -145,10 +161,30 @@ export async function locationRoutes(app: FastifyInstance) {
         ? resolveLocationStatus({ publish, kind, requiresMayorValidation })
         : null;
 
+    const addressFieldsChanged =
+      body.address != null || body.city != null || body.postalCode != null;
+
+    let geocodedCoords: { latitude: number; longitude: number } | null = null;
+    if (addressFieldsChanged) {
+      const geocoded = await geocodeAddress({
+        address: body.address ?? existing.address,
+        city: body.city ?? existing.city,
+        postalCode: body.postalCode ?? existing.postalCode,
+      });
+      geocodedCoords = {
+        latitude: geocoded.latitude,
+        longitude: geocoded.longitude,
+      };
+      body.address = geocoded.address;
+      body.city = geocoded.city;
+      body.postalCode = geocoded.postalCode;
+    }
+
     const location = await prisma.location.update({
       where: { id: request.params.id },
       data: {
         ...body,
+        ...(geocodedCoords ?? {}),
         ...(resolved
           ? { status: resolved.status, mayorValidationStatus: resolved.mayorValidationStatus }
           : {}),

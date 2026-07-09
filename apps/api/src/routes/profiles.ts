@@ -3,6 +3,7 @@ import { registerSchema, updateProfileSchema } from '@wall4art/shared';
 import { auth } from '../lib/auth.js';
 import { prisma } from '../lib/prisma.js';
 import { getSessionUser, requireAuth } from '../lib/session.js';
+import { geocodeCity } from '../lib/geocoding.js';
 import type { UserRole } from '@prisma/client';
 
 const userInclude = {
@@ -95,10 +96,17 @@ export async function profileRoutes(app: FastifyInstance) {
 
     const { name: _name, ...profileData } = body;
     if (Object.keys(profileData).length > 0) {
+      const data = { ...profileData };
+
+      if (data.city) {
+        const coords = await geocodeCity(data.city);
+        Object.assign(data, coords);
+      }
+
       await prisma.profile.upsert({
         where: { userId: sessionUser.id },
-        create: { userId: sessionUser.id, ...profileData },
-        update: profileData,
+        create: { userId: sessionUser.id, ...data },
+        update: data,
       });
     }
 

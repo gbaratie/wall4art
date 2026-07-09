@@ -26,9 +26,7 @@ export const registerSchema = z.object({
 export const updateProfileSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   bio: z.string().max(2000).optional(),
-  city: z.string().max(100).optional(),
-  latitude: z.number().min(-90).max(90).optional(),
-  longitude: z.number().min(-180).max(180).optional(),
+  city: z.string().min(2).max(100).optional(),
   searchRadiusKm: z.number().min(1).max(500).optional(),
   portfolioLinks: portfolioLinksSchema.optional(),
 });
@@ -42,17 +40,21 @@ export const createLocationSchema = z.object({
   address: z.string().min(5).max(300),
   city: z.string().min(2).max(100),
   postalCode: z.string().min(3).max(20),
-  latitude: z.number().min(-90).max(90),
-  longitude: z.number().min(-180).max(180),
   photoUrl: z.string().url(),
   publish: z.boolean().default(false),
 });
 
 export const updateLocationSchema = createLocationSchema.partial();
 
+export const addressSearchSchema = z.object({
+  q: z.string().min(1).max(200),
+  limit: z.coerce.number().min(1).max(10).default(5),
+});
+
 export const locationSearchSchema = z.object({
   latitude: z.coerce.number().min(-90).max(90).optional(),
   longitude: z.coerce.number().min(-180).max(180).optional(),
+  city: z.string().min(2).max(100).optional(),
   radiusKm: z.coerce.number().min(1).max(500).optional(),
   status: z.enum([LocationStatus.OPEN]).optional(),
   kind: z.enum([LocationKind.PRIVATE, LocationKind.PUBLIC]).optional(),
@@ -102,6 +104,7 @@ export const createConversationSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type CreateLocationInput = z.infer<typeof createLocationSchema>;
+export type AddressSearchInput = z.infer<typeof addressSearchSchema>;
 export type LocationSearchInput = z.infer<typeof locationSearchSchema>;
 export type CreateProposalInput = z.infer<typeof createProposalSchema>;
 export type CreateMessageInput = z.infer<typeof createMessageSchema>;

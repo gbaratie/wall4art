@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LocationKind } from '@wall4art/shared';
 import { api } from '@/lib/types';
+import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 import { Button, Card, Input, Label, Textarea } from '@/components/ui';
 
 export function CreateLocationPage() {
@@ -18,8 +19,6 @@ export function CreateLocationPage() {
     address: '',
     city: '',
     postalCode: '',
-    latitude: 48.8566,
-    longitude: 2.3522,
     publish: true,
   });
 
@@ -55,6 +54,9 @@ export function CreateLocationPage() {
   return (
     <Card className="mx-auto max-w-2xl">
       <h1 className="text-xl font-bold sm:text-2xl">Proposer un lieu à décorer</h1>
+      <p className="mt-2 text-sm text-slate-600">
+        Indiquez l&apos;adresse du lieu : la position sera déterminée automatiquement.
+      </p>
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
           <Label>Titre</Label>
@@ -101,46 +103,16 @@ export function CreateLocationPage() {
             </label>
           )}
         </div>
-        <div>
-          <Label>Adresse</Label>
-          <Input value={form.address} onChange={(e) => update('address', e.target.value)} required />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <Label>Ville</Label>
-            <Input value={form.city} onChange={(e) => update('city', e.target.value)} required />
-          </div>
-          <div>
-            <Label>Code postal</Label>
-            <Input
-              value={form.postalCode}
-              onChange={(e) => update('postalCode', e.target.value)}
-              required
-            />
-          </div>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <Label>Latitude</Label>
-            <Input
-              type="number"
-              step="any"
-              value={form.latitude}
-              onChange={(e) => update('latitude', Number(e.target.value))}
-              required
-            />
-          </div>
-          <div>
-            <Label>Longitude</Label>
-            <Input
-              type="number"
-              step="any"
-              value={form.longitude}
-              onChange={(e) => update('longitude', Number(e.target.value))}
-              required
-            />
-          </div>
-        </div>
+        <AddressAutocomplete
+          value={{ address: form.address, city: form.city, postalCode: form.postalCode }}
+          onChange={(addressFields) =>
+            setForm((prev) => ({
+              ...prev,
+              ...addressFields,
+            }))
+          }
+          required
+        />
         <div>
           <Label>Photo du lieu</Label>
           <Input type="file" accept="image/*" onChange={handlePhoto} />

@@ -1,5 +1,14 @@
 import { apiFetch } from './api';
 
+export type GeocodedAddress = {
+  latitude: number;
+  longitude: number;
+  address: string;
+  city: string;
+  postalCode: string;
+  label: string;
+};
+
 export type UserProfile = {
   id: string;
   email: string;
@@ -134,5 +143,9 @@ export const api = {
     const form = new FormData();
     form.append('file', file);
     return apiFetch<{ url: string }>('/api/v1/uploads/image', { method: 'POST', body: form });
+  },
+  searchAddresses: (q: string, limit = 5) => {
+    const query = new URLSearchParams({ q, limit: String(limit) });
+    return apiFetch<GeocodedAddress[]>(`/api/v1/geocoding/search?${query}`);
   },
 };
