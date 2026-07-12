@@ -13,7 +13,11 @@ export async function uploadImage(
   folder = 'wall4art',
 ): Promise<{ url: string; publicId: string }> {
   if (!process.env.CLOUDINARY_CLOUD_NAME) {
-    // Dev fallback: data URL placeholder via base64 upload to a mock
+    if (buffer.length > 1.5 * 1024 * 1024) {
+      throw new Error(
+        'Image trop lourde sans Cloudinary (max 1,5 Mo). Réduisez la taille ou configurez CLOUDINARY_*.',
+      );
+    }
     const base64 = buffer.toString('base64');
     const mime = 'image/jpeg';
     const url = `data:${mime};base64,${base64}`;

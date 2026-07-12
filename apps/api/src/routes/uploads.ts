@@ -16,7 +16,12 @@ export async function uploadRoutes(app: FastifyInstance) {
       return reply.status(400).send({ error: 'File too large (max 10MB)' });
     }
 
-    const result = await uploadImage(buffer, 'wall4art');
-    return { url: result.url, publicId: result.publicId };
+    try {
+      const result = await uploadImage(buffer, 'wall4art');
+      return { url: result.url, publicId: result.publicId };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Upload failed';
+      return reply.status(400).send({ error: message });
+    }
   });
 }

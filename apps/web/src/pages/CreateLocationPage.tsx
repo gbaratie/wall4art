@@ -30,8 +30,14 @@ export function CreateLocationPage() {
   const handlePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const result = await api.uploadImage(file);
-    setPhotoUrl(result.url);
+    setError('');
+    try {
+      const result = await api.uploadImage(file);
+      setPhotoUrl(result.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Échec du téléversement de la photo');
+      setPhotoUrl('');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

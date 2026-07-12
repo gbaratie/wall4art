@@ -1,4 +1,5 @@
 import { apiFetch } from './api';
+import { compressImage } from './compress-image';
 
 export type UserProfile = {
   id: string;
@@ -131,8 +132,9 @@ export const api = {
       body: JSON.stringify({ content }),
     }),
   uploadImage: async (file: File) => {
+    const compressed = await compressImage(file);
     const form = new FormData();
-    form.append('file', file);
+    form.append('file', compressed);
     return apiFetch<{ url: string }>('/api/v1/uploads/image', { method: 'POST', body: form });
   },
 };

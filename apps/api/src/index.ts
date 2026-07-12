@@ -19,7 +19,7 @@ import { uploadRoutes } from './routes/uploads.js';
 const port = Number(process.env.PORT ?? 3002);
 const host = '0.0.0.0';
 
-const app = Fastify({ logger: true });
+const app = Fastify({ logger: true, bodyLimit: 5 * 1024 * 1024 });
 
 const corsOrigins = [
   'http://localhost:5173',
