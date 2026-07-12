@@ -33,7 +33,7 @@ export function LocationMap({
             <Popup>
               <strong>{loc.title}</strong>
               <br />
-              {loc.city}
+              {loc.address}, {loc.postalCode} {loc.city}
               {loc.distanceKm != null && (
                 <>
                   <br />

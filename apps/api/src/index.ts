@@ -15,6 +15,7 @@ import { mayorRoutes } from './routes/mayor.js';
 import { proposalRoutes } from './routes/proposals.js';
 import { conversationRoutes } from './routes/conversations.js';
 import { uploadRoutes } from './routes/uploads.js';
+import { geocodingRoutes } from './routes/geocoding.js';
 
 const port = Number(process.env.PORT ?? 3002);
 const host = '0.0.0.0';
@@ -108,6 +109,7 @@ await app.register(mayorRoutes);
 await app.register(proposalRoutes);
 await app.register(conversationRoutes);
 await app.register(uploadRoutes);
+await app.register(geocodingRoutes);
 
 try {
   await app.listen({ port, host });

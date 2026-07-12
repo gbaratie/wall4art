@@ -10,12 +10,18 @@ export function ExplorePage() {
   const profile = user?.profile;
 
   const { data: locations = [], isLoading } = useQuery({
-    queryKey: ['locations', 'explore', profile?.latitude, profile?.longitude],
+    queryKey: ['locations', 'explore', profile?.latitude, profile?.longitude, profile?.city],
     queryFn: () =>
       api.getLocations({
         status: 'OPEN',
-        latitude: profile?.latitude ?? 48.8566,
-        longitude: profile?.longitude ?? 2.3522,
+        ...(profile?.latitude != null && profile?.longitude != null
+          ? {
+              latitude: profile.latitude,
+              longitude: profile.longitude,
+            }
+          : profile?.city
+            ? { city: profile.city }
+            : {}),
         radiusKm: profile?.searchRadiusKm ?? 50,
       }),
     enabled: !!user,
@@ -37,7 +43,11 @@ export function ExplorePage() {
 
       <LocationMap
         locations={locations}
-        center={[profile?.latitude ?? 48.8566, profile?.longitude ?? 2.3522]}
+        center={
+          profile?.latitude != null && profile?.longitude != null
+            ? [profile.latitude, profile.longitude]
+            : undefined
+        }
       />
 
       {isLoading ? (
@@ -59,7 +69,9 @@ export function ExplorePage() {
                 <h2 className="text-lg font-semibold">{loc.title}</h2>
                 <Badge tone="brand">{loc.kind}</Badge>
               </div>
-              <p className="mt-2 text-sm text-slate-600">{loc.city}</p>
+              <p className="mt-2 text-sm text-slate-600">
+                {loc.address}, {loc.postalCode} {loc.city}
+              </p>
               {loc.distanceKm != null && (
                 <p className="text-sm text-slate-500">{loc.distanceKm.toFixed(1)} km</p>
               )}

@@ -13,8 +13,6 @@ export function ProfilePage() {
     name: user?.name ?? '',
     bio: profile?.bio ?? '',
     city: profile?.city ?? '',
-    latitude: profile?.latitude ?? 48.8566,
-    longitude: profile?.longitude ?? 2.3522,
     searchRadiusKm: profile?.searchRadiusKm ?? 50,
     instagram: profile?.portfolioLinks?.instagram ?? '',
     behance: profile?.portfolioLinks?.behance ?? '',
@@ -27,8 +25,6 @@ export function ProfilePage() {
         name: form.name,
         bio: form.bio,
         city: form.city,
-        latitude: form.latitude,
-        longitude: form.longitude,
         searchRadiusKm: form.searchRadiusKm,
         portfolioLinks: {
           instagram: form.instagram || undefined,
@@ -78,6 +74,7 @@ export function ProfilePage() {
             <Input
               value={form.city}
               onChange={(e) => setForm({ ...form, city: e.target.value })}
+              placeholder="Ex. Lyon, Paris 11e"
             />
           </div>
           <div>
@@ -89,26 +86,9 @@ export function ProfilePage() {
             />
           </div>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <Label>Latitude</Label>
-            <Input
-              type="number"
-              step="any"
-              value={form.latitude}
-              onChange={(e) => setForm({ ...form, latitude: Number(e.target.value) })}
-            />
-          </div>
-          <div>
-            <Label>Longitude</Label>
-            <Input
-              type="number"
-              step="any"
-              value={form.longitude}
-              onChange={(e) => setForm({ ...form, longitude: Number(e.target.value) })}
-            />
-          </div>
-        </div>
+        <p className="text-sm text-slate-500">
+          Votre ville sert à trouver les lieux à proximité — aucune coordonnée à saisir.
+        </p>
 
         {user.roles.includes('ARTISTE') && (
           <>
