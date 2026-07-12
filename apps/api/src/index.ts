@@ -20,7 +20,7 @@ import { geocodingRoutes } from './routes/geocoding.js';
 const port = Number(process.env.PORT ?? 3002);
 const host = '0.0.0.0';
 
-const app = Fastify({ logger: true });
+const app = Fastify({ logger: true, bodyLimit: 5 * 1024 * 1024 });
 
 const corsOrigins = [
   'http://localhost:5173',
@@ -30,6 +30,20 @@ const corsOrigins = [
 
 function isLocalDevOrigin(origin: string) {
   return /^https?:\/\/localhost(:\d+)?$/.test(origin);
+}
+
+function isAllowedOrigin(origin: string | undefined): origin is string {
+  if (!origin) return false;
+  if (process.env.NODE_ENV === 'development' && isLocalDevOrigin(origin)) return true;
+  return corsOrigins.includes(origin);
+}
+
+function applyAuthCors(request: { headers: { origin?: string } }, reply: { raw: { setHeader: (name: string, value: string) => void } }) {
+  const origin = request.headers.origin;
+  if (!isAllowedOrigin(origin)) return;
+  reply.raw.setHeader('Access-Control-Allow-Origin', origin);
+  reply.raw.setHeader('Access-Control-Allow-Credentials', 'true');
+  reply.raw.setHeader('Vary', 'Origin');
 }
 
 await app.register(cors, {
@@ -42,6 +56,7 @@ await app.register(cors, {
     callback(null, false);
   },
   credentials: true,
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 });
 
 await app.register(multipart, {
@@ -71,6 +86,19 @@ await app.register(async function authRoutes(app) {
   });
 
   app.all('/api/auth/*', async (request, reply) => {
+    applyAuthCors(request, reply);
+
+    if (request.method === 'OPTIONS') {
+      reply.raw.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+      reply.raw.setHeader(
+        'Access-Control-Allow-Headers',
+        'Content-Type, Authorization, X-Requested-With',
+      );
+      reply.raw.statusCode = 204;
+      reply.raw.end();
+      return;
+    }
+
     await authHandler(request.raw, reply.raw);
   });
 });

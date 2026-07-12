@@ -40,7 +40,7 @@ export const createLocationSchema = z.object({
   address: z.string().min(5).max(300),
   city: z.string().min(2).max(100),
   postalCode: z.string().min(3).max(20),
-  photoUrl: z.string().url(),
+  photoUrl: z.union([z.string().url(), z.string().startsWith('data:image/')]),
   publish: z.boolean().default(false),
 });
 
