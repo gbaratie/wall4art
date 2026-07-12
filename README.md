@@ -85,6 +85,7 @@ pnpm dev
 |-------|--------------|------|
 | maire@wall4art.local | password123 | Maire |
 | marie@wall4art.local | password123 | Particulier |
+| pierre@wall4art.local | password123 | Particulier |
 | lea@wall4art.local | password123 | Artiste |
 | tom@wall4art.local | password123 | Artiste |
 
@@ -139,6 +140,27 @@ packages/
 3. Push sur `main` déclenche le workflow [`.github/workflows/deploy-web.yml`](.github/workflows/deploy-web.yml)
 
 Le front est servi sous `/wall4art/` (nom du dépôt).
+
+### Comptes et contenu de démo en production
+
+Les mêmes comptes que le seed local sont disponibles sur [https://gbaratie.github.io/wall4art/](https://gbaratie.github.io/wall4art/) (mot de passe `password123` pour tous) :
+
+| Email | Rôle | Scénario de démo |
+|-------|------|------------------|
+| `marie@wall4art.local` | Particulier | Lieu privé « Mur de cour intérieure », messagerie avec Léa |
+| `pierre@wall4art.local` | Particulier | Lieu public en attente « Sous-passage place du marché » |
+| `maire@wall4art.local` | Maire | File de validation, lieu approuvé « Mur bibliothèque municipale » |
+| `lea@wall4art.local` | Artiste | Exploration, proposition « Jardin vertical peint » |
+| `tom@wall4art.local` | Artiste | Profil Lyon (zone élargie) |
+
+Pour (re)peupler la production via l'API :
+
+```bash
+pnpm seed:production:demo
+# API_URL=https://wall4art-api.onrender.com par défaut
+```
+
+Le script est idempotent : il ignore les comptes et lieux déjà existants.
 
 ## Scripts utiles
 
