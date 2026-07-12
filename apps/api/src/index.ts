@@ -55,6 +55,7 @@ await app.register(cors, {
     callback(null, false);
   },
   credentials: true,
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 });
 
 await app.register(multipart, {
@@ -87,7 +88,7 @@ await app.register(async function authRoutes(app) {
     applyAuthCors(request, reply);
 
     if (request.method === 'OPTIONS') {
-      reply.raw.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      reply.raw.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
       reply.raw.setHeader(
         'Access-Control-Allow-Headers',
         'Content-Type, Authorization, X-Requested-With',
