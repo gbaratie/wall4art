@@ -12,6 +12,7 @@
     "lint": "pnpm run --parallel lint",
     "test:e2e": "bash scripts/run-e2e.sh",
     "test:e2e:install": "playwright install chromium --with-deps",
+    "seed:production:demo": "pnpm --filter @wall4art/api exec tsx ../../scripts/seed-production-demo.ts",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
   },
   "devDependencies": {
