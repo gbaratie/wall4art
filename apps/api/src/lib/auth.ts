@@ -10,12 +10,23 @@ const trustedOrigins = [
   process.env.CORS_ORIGIN,
 ].filter(Boolean) as string[];
 
+const isCrossOriginProd =
+  process.env.NODE_ENV === 'production' && Boolean(process.env.CORS_ORIGIN);
+
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: 'postgresql' }),
   baseURL,
   basePath: '/api/auth',
   secret: process.env.BETTER_AUTH_SECRET ?? 'dev-secret-change-me',
   trustedOrigins,
+  advanced: isCrossOriginProd
+    ? {
+        defaultCookieAttributes: {
+          sameSite: 'none',
+          secure: true,
+        },
+      }
+    : undefined,
   emailAndPassword: {
     enabled: true,
   },
