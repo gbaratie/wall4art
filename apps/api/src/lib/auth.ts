@@ -26,16 +26,6 @@ export const auth = betterAuth({
       enabled: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
     },
   },
-  user: {
-    additionalFields: {
-      roles: {
-        type: 'string[]',
-        required: false,
-        defaultValue: [],
-        input: false,
-      },
-    },
-  },
 });
 
 export type Session = typeof auth.$Infer.Session;
