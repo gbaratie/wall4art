@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/types';
 import { Badge, Card } from '@/components/ui';
+import { QueryErrorState } from '@/components/ErrorAlert';
 import { LocationMap } from '@/components/LocationMap';
 
 export function ExplorePage() {
   const { user } = useAuth();
   const profile = user?.profile;
 
-  const { data: locations = [], isLoading } = useQuery({
+  const { data: locations = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['locations', 'explore', profile?.latitude, profile?.longitude, profile?.city],
     queryFn: () =>
       api.getLocations({
@@ -50,7 +51,9 @@ export function ExplorePage() {
         }
       />
 
-      {isLoading ? (
+      {isError ? (
+        <QueryErrorState error={error} onRetry={() => refetch()} />
+      ) : isLoading ? (
         <p>Chargement...</p>
       ) : locations.length === 0 ? (
         <Card>

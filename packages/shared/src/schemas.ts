@@ -83,6 +83,16 @@ export const createProposalSchema = z.object({
   submit: z.boolean().default(true),
 });
 
+export const updateProposalSchema = createProposalSchema
+  .omit({ submit: true })
+  .partial()
+  .extend({
+    submit: z.boolean().optional(),
+  })
+  .refine((data) => Object.values(data).some((v) => v !== undefined), {
+    message: 'Au moins un champ doit être fourni',
+  });
+
 export const updateProposalStatusSchema = z.object({
   status: z.enum([
     ProposalStatus.UNDER_REVIEW,
@@ -107,4 +117,5 @@ export type CreateLocationInput = z.infer<typeof createLocationSchema>;
 export type AddressSearchInput = z.infer<typeof addressSearchSchema>;
 export type LocationSearchInput = z.infer<typeof locationSearchSchema>;
 export type CreateProposalInput = z.infer<typeof createProposalSchema>;
+export type UpdateProposalInput = z.infer<typeof updateProposalSchema>;
 export type CreateMessageInput = z.infer<typeof createMessageSchema>;

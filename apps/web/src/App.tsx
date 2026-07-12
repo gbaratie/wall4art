@@ -8,6 +8,7 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { CreateLocationPage } from '@/pages/CreateLocationPage';
 import { ExplorePage } from '@/pages/ExplorePage';
 import { LocationDetailPage } from '@/pages/LocationDetailPage';
+import { EditProposalPage } from '@/pages/EditProposalPage';
 import { MessagesPage } from '@/pages/MessagesPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 
@@ -43,6 +44,14 @@ export function App() {
         />
         <Route path="explore" element={<ExplorePage />} />
         <Route path="locations/:id" element={<LocationDetailPage />} />
+        <Route
+          path="proposals/:id/edit"
+          element={
+            <ProtectedRoute>
+              <EditProposalPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="messages"
           element={

@@ -16,6 +16,8 @@ import { proposalRoutes } from './routes/proposals.js';
 import { conversationRoutes } from './routes/conversations.js';
 import { uploadRoutes } from './routes/uploads.js';
 import { geocodingRoutes } from './routes/geocoding.js';
+import { registerOpenApi } from './lib/openapi.js';
+import { normalizeError } from './lib/errors.js';
 
 const port = Number(process.env.PORT ?? 3002);
 const host = '0.0.0.0';
@@ -63,13 +65,12 @@ await app.register(multipart, {
   limits: { fileSize: 10 * 1024 * 1024 },
 });
 
+await registerOpenApi(app);
+
 app.setErrorHandler((error: unknown, _request, reply) => {
-  const err = error as Error & { statusCode?: number; name?: string };
-  const statusCode = err.statusCode ?? (err.name === 'ZodError' ? 400 : 500);
-  app.log.error(error);
-  reply.status(statusCode).send({
-    error: err.message ?? 'Internal Server Error',
-  });
+  const { statusCode, body } = normalizeError(error);
+  if (statusCode >= 500) app.log.error(error);
+  reply.status(statusCode).send({ error: body });
 });
 
 app.get('/health', async () => ({ status: 'ok' }));

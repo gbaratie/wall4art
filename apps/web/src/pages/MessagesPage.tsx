@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { api } from '@/lib/types';
 import { useAuth } from '@/context/AuthContext';
 import { Button, Card, Input } from '@/components/ui';
+import { ErrorAlert, QueryErrorState } from '@/components/ErrorAlert';
 import { formatDate } from '@/lib/utils';
 
 export function MessagesPage() {
@@ -12,14 +13,24 @@ export function MessagesPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [content, setContent] = useState('');
 
-  const { data: conversations = [] } = useQuery({
+  const {
+    data: conversations = [],
+    isError: conversationsError,
+    error: conversationsErr,
+    refetch: refetchConversations,
+  } = useQuery({
     queryKey: ['conversations'],
     queryFn: api.getConversations,
     enabled: !!user,
     refetchInterval: 10000,
   });
 
-  const { data: messages = [] } = useQuery({
+  const {
+    data: messages = [],
+    isError: messagesError,
+    error: messagesErr,
+    refetch: refetchMessages,
+  } = useQuery({
     queryKey: ['messages', selectedId],
     queryFn: () => api.getMessages(selectedId!),
     enabled: !!selectedId,
@@ -46,6 +57,9 @@ export function MessagesPage() {
     <div className="grid gap-4 lg:grid-cols-3">
       <Card className={`lg:col-span-1 ${!showListOnMobile ? 'hidden lg:block' : ''}`}>
         <h1 className="text-xl font-bold sm:text-2xl">Conversations</h1>
+        {conversationsError ? (
+          <QueryErrorState error={conversationsErr} onRetry={() => refetchConversations()} />
+        ) : (
         <div className="mt-4 space-y-2">
           {conversations.length === 0 && (
             <p className="text-sm text-slate-500">Aucune conversation pour le moment.</p>
@@ -65,6 +79,7 @@ export function MessagesPage() {
             </button>
           ))}
         </div>
+        )}
       </Card>
 
       <Card
@@ -89,20 +104,25 @@ export function MessagesPage() {
               </p>
             </div>
             <div className="flex-1 space-y-3 overflow-y-auto py-4">
-              {messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm sm:max-w-[80%] ${
-                    m.sender.id === user.id
-                      ? 'ml-auto bg-brand-600 text-white'
-                      : 'bg-slate-100 text-slate-800'
-                  }`}
-                >
-                  <p>{m.content}</p>
-                  <p className="mt-1 text-xs opacity-70">{formatDate(m.createdAt)}</p>
-                </div>
-              ))}
+              {messagesError ? (
+                <QueryErrorState error={messagesErr} onRetry={() => refetchMessages()} />
+              ) : (
+                messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm sm:max-w-[80%] ${
+                      m.sender.id === user.id
+                        ? 'ml-auto bg-brand-600 text-white'
+                        : 'bg-slate-100 text-slate-800'
+                    }`}
+                  >
+                    <p>{m.content}</p>
+                    <p className="mt-1 text-xs opacity-70">{formatDate(m.createdAt)}</p>
+                  </div>
+                ))
+              )}
             </div>
+            <ErrorAlert error={sendMutation.error} className="mt-2" />
             <form
               className="mt-4 flex flex-col gap-2 sm:flex-row"
               onSubmit={(e) => {

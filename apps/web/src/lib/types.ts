@@ -125,8 +125,14 @@ export const api = {
       body: JSON.stringify(data),
     }),
   getMyProposals: () => apiFetch<Proposal[]>('/api/v1/proposals/mine'),
+  getProposal: (id: string) => apiFetch<Proposal>(`/api/v1/proposals/${id}`),
   getLocationProposals: (locationId: string) =>
     apiFetch<Proposal[]>(`/api/v1/locations/${locationId}/proposals`),
+  updateProposal: (id: string, data: unknown) =>
+    apiFetch<Proposal>(`/api/v1/proposals/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
   updateProposalStatus: (id: string, status: string) =>
     apiFetch<Proposal>(`/api/v1/proposals/${id}/status`, {
       method: 'PATCH',
