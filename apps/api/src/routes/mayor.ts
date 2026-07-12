@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { mayorDecisionSchema } from '@wall4art/shared';
 import { prisma } from '../lib/prisma.js';
+import { sendError } from '../lib/errors.js';
 import { getSessionUser, requireAuth, requireRole } from '../lib/session.js';
 
 export async function mayorRoutes(app: FastifyInstance) {
@@ -28,9 +29,9 @@ export async function mayorRoutes(app: FastifyInstance) {
       const body = mayorDecisionSchema.parse(request.body ?? {});
 
       const location = await prisma.location.findUnique({ where: { id: request.params.id } });
-      if (!location) return reply.status(404).send({ error: 'Location not found' });
+      if (!location) return sendError(reply, 404, 'LOCATION_NOT_FOUND');
       if (location.status !== 'PENDING_VALIDATION') {
-        return reply.status(400).send({ error: 'Location is not pending validation' });
+        return sendError(reply, 400, 'LOCATION_NOT_PENDING');
       }
 
       return prisma.location.update({
@@ -54,9 +55,9 @@ export async function mayorRoutes(app: FastifyInstance) {
       const body = mayorDecisionSchema.parse(request.body ?? {});
 
       const location = await prisma.location.findUnique({ where: { id: request.params.id } });
-      if (!location) return reply.status(404).send({ error: 'Location not found' });
+      if (!location) return sendError(reply, 404, 'LOCATION_NOT_FOUND');
       if (location.status !== 'PENDING_VALIDATION') {
-        return reply.status(400).send({ error: 'Location is not pending validation' });
+        return sendError(reply, 400, 'LOCATION_NOT_PENDING');
       }
 
       return prisma.location.update({

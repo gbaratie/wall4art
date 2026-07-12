@@ -3,8 +3,17 @@ import { useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/types';
-import { Badge, Button, Card, Input, Label, Textarea } from '@/components/ui';
+import { Badge, Button, Card, Textarea } from '@/components/ui';
 import { LocationMap } from '@/components/LocationMap';
+import { ErrorAlert, QueryErrorState } from '@/components/ErrorAlert';
+import {
+  ProposalForm,
+  buildProposalPayload,
+  proposalToFormValues,
+  type ProposalFormValues,
+} from '@/components/ProposalForm';
+
+const EDITABLE_STATUSES = ['DRAFT', 'SUBMITTED'];
 
 export function LocationDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -12,22 +21,23 @@ export function LocationDetailPage() {
   const queryClient = useQueryClient();
   const [showProposalForm, setShowProposalForm] = useState(false);
   const [mayorComment, setMayorComment] = useState('');
-  const [proposal, setProposal] = useState({
-    title: '',
-    description: '',
-    commitments: '',
-    estimatedDurationDays: 14,
-    fundingRequested: false,
-    fundingAmount: 0,
-    fundingDescription: '',
-    sketchUrl: '',
-    submit: true,
-  });
 
-  const { data: location, isLoading } = useQuery({
+  const {
+    data: location,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['location', id],
     queryFn: () => api.getLocation(id!),
     enabled: !!id,
+  });
+
+  const { data: myProposals = [] } = useQuery({
+    queryKey: ['proposals', 'mine'],
+    queryFn: api.getMyProposals,
+    enabled: !!user?.roles.includes('ARTISTE'),
   });
 
   const { data: hostProposals = [] } = useQuery({
@@ -35,6 +45,10 @@ export function LocationDetailPage() {
     queryFn: () => api.getLocationProposals(id!),
     enabled: !!id && !!user && location?.hostId === user.id,
   });
+
+  const existingProposal = myProposals.find((p) => p.locationId === id);
+  const canEditProposal =
+    existingProposal && EDITABLE_STATUSES.includes(existingProposal.status);
 
   const mayorMutation = useMutation({
     mutationFn: ({ action }: { action: 'approve' | 'reject' }) =>
@@ -48,19 +62,21 @@ export function LocationDetailPage() {
   });
 
   const proposalMutation = useMutation({
-    mutationFn: () => {
-      const { sketchUrl, fundingAmount, fundingDescription, ...rest } = proposal;
-      return api.createProposal(id!, {
-        ...rest,
-        ...(sketchUrl ? { sketchUrl } : {}),
-        ...(rest.fundingRequested
-          ? {
-              fundingAmount: fundingAmount || undefined,
-              fundingDescription: fundingDescription || undefined,
-            }
-          : { fundingRequested: false }),
-      });
+    mutationFn: ({ values, submit }: { values: ProposalFormValues; submit: boolean }) =>
+      api.createProposal(id!, { ...buildProposalPayload(values), submit }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['location', id] });
+      queryClient.invalidateQueries({ queryKey: ['proposals', 'mine'] });
+      setShowProposalForm(false);
     },
+  });
+
+  const updateProposalMutation = useMutation({
+    mutationFn: ({ values, submit }: { values: ProposalFormValues; submit: boolean }) =>
+      api.updateProposal(existingProposal!.id, {
+        ...buildProposalPayload(values),
+        submit,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['location', id] });
       queryClient.invalidateQueries({ queryKey: ['proposals', 'mine'] });
@@ -77,19 +93,14 @@ export function LocationDetailPage() {
     },
   });
 
-  if (isLoading || !location) return <p>Chargement...</p>;
+  if (isLoading) return <p>Chargement...</p>;
+  if (isError) return <QueryErrorState error={error} onRetry={() => refetch()} />;
+  if (!location) return null;
 
   const isHost = user?.id === location.hostId;
   const isMayor = user?.roles.includes('MAIRE');
   const isArtist = user?.roles.includes('ARTISTE');
-  const canPropose = isArtist && location.status === 'OPEN';
-
-  const handleSketch = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const result = await api.uploadImage(file);
-    setProposal((p) => ({ ...p, sketchUrl: result.url }));
-  };
+  const canPropose = isArtist && location.status === 'OPEN' && !existingProposal;
 
   return (
     <div className="space-y-6">
@@ -125,6 +136,7 @@ export function LocationDetailPage() {
             value={mayorComment}
             onChange={(e) => setMayorComment(e.target.value)}
           />
+          <ErrorAlert error={mayorMutation.error} className="mt-3" />
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             <Button onClick={() => mayorMutation.mutate({ action: 'approve' })} className="w-full sm:w-auto">
               Approuver
@@ -145,100 +157,42 @@ export function LocationDetailPage() {
           {!showProposalForm ? (
             <Button onClick={() => setShowProposalForm(true)}>Soumettre une proposition</Button>
           ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                proposalMutation.mutate();
-              }}
-              className="space-y-4"
-            >
-              <h2 className="text-lg font-semibold">Nouvelle proposition</h2>
-              <div>
-                <Label>Titre</Label>
-                <Input
-                  value={proposal.title}
-                  onChange={(e) => setProposal({ ...proposal, title: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Description</Label>
-                <Textarea
-                  value={proposal.description}
-                  onChange={(e) => setProposal({ ...proposal, description: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Engagements</Label>
-                <Textarea
-                  value={proposal.commitments}
-                  onChange={(e) => setProposal({ ...proposal, commitments: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Durée estimée (jours)</Label>
-                <Input
-                  type="number"
-                  value={proposal.estimatedDurationDays}
-                  onChange={(e) =>
-                    setProposal({ ...proposal, estimatedDurationDays: Number(e.target.value) })
-                  }
-                  required
-                />
-              </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={proposal.fundingRequested}
-                  onChange={(e) =>
-                    setProposal({ ...proposal, fundingRequested: e.target.checked })
-                  }
-                />
-                Demande de financement
-              </label>
-              {proposal.fundingRequested && (
-                <>
-                  <div>
-                    <Label>Montant (€)</Label>
-                    <Input
-                      type="number"
-                      value={proposal.fundingAmount}
-                      onChange={(e) =>
-                        setProposal({ ...proposal, fundingAmount: Number(e.target.value) })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label>Description du financement</Label>
-                    <Textarea
-                      value={proposal.fundingDescription}
-                      onChange={(e) =>
-                        setProposal({ ...proposal, fundingDescription: e.target.value })
-                      }
-                    />
-                  </div>
-                </>
-              )}
-              <div>
-                <Label>Croquis (optionnel)</Label>
-                <Input type="file" accept="image/*" onChange={handleSketch} />
-              </div>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button type="submit" disabled={proposalMutation.isPending} className="w-full sm:w-auto">
-                  Envoyer
-                </Button>
-                <Button
-                  variant="secondary"
-                  type="button"
-                  onClick={() => setShowProposalForm(false)}
-                  className="w-full sm:w-auto"
-                >
-                  Annuler
-                </Button>
-              </div>
-            </form>
+            <ProposalForm
+              mode="create"
+              isPending={proposalMutation.isPending}
+              error={proposalMutation.error}
+              onSubmit={(values, { submit }) => proposalMutation.mutate({ values, submit })}
+              onCancel={() => setShowProposalForm(false)}
+            />
+          )}
+        </Card>
+      )}
+
+      {canEditProposal && existingProposal && (
+        <Card>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-lg font-semibold">Ma proposition</h2>
+              <p className="text-sm text-slate-500">Statut : {existingProposal.status}</p>
+            </div>
+            {!showProposalForm && (
+              <Button onClick={() => setShowProposalForm(true)}>Modifier</Button>
+            )}
+          </div>
+          {!showProposalForm ? (
+            <p className="text-sm text-slate-600">{existingProposal.description}</p>
+          ) : (
+            <ProposalForm
+              mode="edit"
+              initialValues={proposalToFormValues(existingProposal)}
+              isDraft={existingProposal.status === 'DRAFT'}
+              isPending={updateProposalMutation.isPending}
+              error={updateProposalMutation.error}
+              onSubmit={(values, { submit }) =>
+                updateProposalMutation.mutate({ values, submit })
+              }
+              onCancel={() => setShowProposalForm(false)}
+            />
           )}
         </Card>
       )}
@@ -246,6 +200,7 @@ export function LocationDetailPage() {
       {isHost && (
         <Card>
           <h2 className="text-lg font-semibold">Propositions reçues</h2>
+          <ErrorAlert error={statusMutation.error} className="mt-3" />
           {hostProposals.length === 0 ? (
             <p className="mt-2 text-sm text-slate-600">Aucune proposition pour le moment.</p>
           ) : (

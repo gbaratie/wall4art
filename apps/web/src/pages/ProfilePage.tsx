@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/types';
 import { Button, Card, Input, Label, Textarea } from '@/components/ui';
+import { ErrorAlert } from '@/components/ErrorAlert';
 
 export function ProfilePage() {
   const { user, refresh } = useAuth();
@@ -123,6 +124,7 @@ export function ProfilePage() {
         <Button type="submit" disabled={mutation.isPending} className="w-full sm:w-auto">
           {mutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
         </Button>
+        <ErrorAlert error={mutation.error} />
         {mutation.isSuccess && (
           <p className="text-sm text-green-600">Profil mis à jour.</p>
         )}

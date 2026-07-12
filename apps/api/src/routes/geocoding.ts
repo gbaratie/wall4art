@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { addressSearchSchema } from '@wall4art/shared';
 import { searchAddresses } from '../lib/geocoding.js';
+import { sendError } from '../lib/errors.js';
 
 export async function geocodingRoutes(app: FastifyInstance) {
   app.get('/api/v1/geocoding/search', async (request, reply) => {
@@ -14,7 +15,7 @@ export async function geocodingRoutes(app: FastifyInstance) {
       return await searchAddresses(query.q, query.limit);
     } catch (error) {
       request.log.error(error);
-      return reply.status(502).send({ error: 'Service de géolocalisation indisponible' });
+      return sendError(reply, 502, 'GEOCODING_UNAVAILABLE');
     }
   });
 }

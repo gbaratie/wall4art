@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { registerSchema, updateProfileSchema } from '@wall4art/shared';
 import { auth } from '../lib/auth.js';
 import { prisma } from '../lib/prisma.js';
+import { sendError } from '../lib/errors.js';
 import { getSessionUser, requireAuth } from '../lib/session.js';
 import { geocodeCity } from '../lib/geocoding.js';
 import type { UserRole } from '@prisma/client';
@@ -41,9 +42,7 @@ export async function profileRoutes(app: FastifyInstance) {
     const body = registerSchema.parse(request.body);
 
     const existing = await prisma.user.findUnique({ where: { email: body.email } });
-    if (existing) {
-      return reply.status(409).send({ error: 'Email already registered' });
-    }
+    if (existing) return sendError(reply, 409, 'EMAIL_ALREADY_REGISTERED');
 
     const result = await auth.api.signUpEmail({
       body: {
@@ -53,9 +52,7 @@ export async function profileRoutes(app: FastifyInstance) {
       },
     });
 
-    if (!result?.user) {
-      return reply.status(400).send({ error: 'Registration failed' });
-    }
+    if (!result?.user) return sendError(reply, 400, 'REGISTRATION_FAILED');
 
     await prisma.userRoleAssignment.createMany({
       data: body.roles.map((role) => ({ userId: result.user.id, role })),
@@ -79,7 +76,7 @@ export async function profileRoutes(app: FastifyInstance) {
       where: { id: sessionUser.id },
       include: userInclude,
     });
-    if (!user) return reply.status(404).send({ error: 'User not found' });
+    if (!user) return sendError(reply, 404, 'USER_NOT_FOUND');
     return formatUser(user);
   });
 
@@ -123,9 +120,9 @@ export async function profileRoutes(app: FastifyInstance) {
       where: { id: request.params.id },
       include: userInclude,
     });
-    if (!user) return reply.status(404).send({ error: 'Artist not found' });
+    if (!user) return sendError(reply, 404, 'ARTIST_NOT_FOUND');
     if (!user.roles.some((r) => r.role === 'ARTISTE')) {
-      return reply.status(404).send({ error: 'Artist not found' });
+      return sendError(reply, 404, 'ARTIST_NOT_FOUND');
     }
     return formatUser(user);
   });

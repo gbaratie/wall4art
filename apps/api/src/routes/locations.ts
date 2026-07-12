@@ -8,6 +8,7 @@ import {
 import { prisma } from '../lib/prisma.js';
 import { haversineKm, resolveLocationStatus } from '../lib/location-utils.js';
 import { geocodeAddress, geocodeCity } from '../lib/geocoding.js';
+import { sendError } from '../lib/errors.js';
 import { getSessionUser, requireAuth, requireRole } from '../lib/session.js';
 
 const locationSelect = {
@@ -139,7 +140,7 @@ export async function locationRoutes(app: FastifyInstance) {
         },
       },
     });
-    if (!location) return reply.status(404).send({ error: 'Location not found' });
+    if (!location) return sendError(reply, 404, 'LOCATION_NOT_FOUND');
     return location;
   });
 
@@ -148,8 +149,8 @@ export async function locationRoutes(app: FastifyInstance) {
     const body = updateLocationSchema.parse(request.body);
 
     const existing = await prisma.location.findUnique({ where: { id: request.params.id } });
-    if (!existing) return reply.status(404).send({ error: 'Location not found' });
-    if (existing.hostId !== user.id) return reply.status(403).send({ error: 'Forbidden' });
+    if (!existing) return sendError(reply, 404, 'LOCATION_NOT_FOUND');
+    if (existing.hostId !== user.id) return sendError(reply, 403, 'FORBIDDEN');
 
     const publish = body.publish ?? false;
     const kind = body.kind ?? existing.kind;

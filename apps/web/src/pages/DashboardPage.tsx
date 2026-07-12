@@ -3,23 +3,41 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/types';
 import { Badge, Button, Card } from '@/components/ui';
+import { QueryErrorState } from '@/components/ErrorAlert';
+
+const EDITABLE_STATUSES = ['DRAFT', 'SUBMITTED'];
 
 export function DashboardPage() {
   const { user } = useAuth();
 
-  const { data: myLocations = [] } = useQuery({
+  const {
+    data: myLocations = [],
+    isError: locationsError,
+    error: locationsErr,
+    refetch: refetchLocations,
+  } = useQuery({
     queryKey: ['locations', 'mine'],
     queryFn: () => api.getLocations({ mine: true }),
     enabled: !!user?.roles.includes('PARTICULIER'),
   });
 
-  const { data: pendingMayor = [] } = useQuery({
+  const {
+    data: pendingMayor = [],
+    isError: mayorError,
+    error: mayorErr,
+    refetch: refetchMayor,
+  } = useQuery({
     queryKey: ['mayor', 'pending'],
     queryFn: api.getPendingMayorLocations,
     enabled: !!user?.roles.includes('MAIRE'),
   });
 
-  const { data: myProposals = [] } = useQuery({
+  const {
+    data: myProposals = [],
+    isError: proposalsError,
+    error: proposalsErr,
+    refetch: refetchProposals,
+  } = useQuery({
     queryKey: ['proposals', 'mine'],
     queryFn: api.getMyProposals,
     enabled: !!user?.roles.includes('ARTISTE'),
@@ -44,7 +62,9 @@ export function DashboardPage() {
               <Button className="w-full sm:w-auto">Nouveau lieu</Button>
             </Link>
           </div>
-          {myLocations.length === 0 ? (
+          {locationsError ? (
+            <QueryErrorState error={locationsErr} onRetry={() => refetchLocations()} />
+          ) : myLocations.length === 0 ? (
             <Card>
               <p className="text-slate-600">Aucun lieu proposé pour le moment.</p>
             </Card>
@@ -70,7 +90,9 @@ export function DashboardPage() {
       {user.roles.includes('MAIRE') && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold sm:text-xl">Lieux en attente de validation</h2>
-          {pendingMayor.length === 0 ? (
+          {mayorError ? (
+            <QueryErrorState error={mayorErr} onRetry={() => refetchMayor()} />
+          ) : pendingMayor.length === 0 ? (
             <Card>
               <p className="text-slate-600">Aucune demande en attente.</p>
             </Card>
@@ -100,7 +122,9 @@ export function DashboardPage() {
               </Button>
             </Link>
           </div>
-          {myProposals.length === 0 ? (
+          {proposalsError ? (
+            <QueryErrorState error={proposalsErr} onRetry={() => refetchProposals()} />
+          ) : myProposals.length === 0 ? (
             <Card>
               <p className="text-slate-600">Aucune proposition soumise.</p>
             </Card>
@@ -113,12 +137,22 @@ export function DashboardPage() {
                     <Badge>{p.status}</Badge>
                   </div>
                   <p className="mt-2 text-sm text-slate-600">{p.location?.title}</p>
-                  <Link
-                    to={`/locations/${p.locationId}`}
-                    className="mt-4 inline-block text-sm text-brand-600"
-                  >
-                    Voir le lieu →
-                  </Link>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <Link
+                      to={`/locations/${p.locationId}`}
+                      className="text-sm text-brand-600"
+                    >
+                      Voir le lieu →
+                    </Link>
+                    {EDITABLE_STATUSES.includes(p.status) && (
+                      <Link
+                        to={`/proposals/${p.id}/edit`}
+                        className="text-sm font-medium text-brand-600"
+                      >
+                        Modifier →
+                      </Link>
+                    )}
+                  </div>
                 </Card>
               ))}
             </div>

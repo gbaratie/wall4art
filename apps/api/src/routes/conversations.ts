@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { createConversationSchema, createMessageSchema } from '@wall4art/shared';
 import { prisma } from '../lib/prisma.js';
+import { sendError } from '../lib/errors.js';
 import { getSessionUser, requireAuth } from '../lib/session.js';
 
 export async function conversationRoutes(app: FastifyInstance) {
@@ -31,15 +32,13 @@ export async function conversationRoutes(app: FastifyInstance) {
     const body = createConversationSchema.parse(request.body);
 
     const location = await prisma.location.findUnique({ where: { id: body.locationId } });
-    if (!location) return reply.status(404).send({ error: 'Location not found' });
+    if (!location) return sendError(reply, 404, 'LOCATION_NOT_FOUND');
 
     const artistId = body.artistId ?? user.id;
     const isHost = location.hostId === user.id;
     const isArtist = artistId === user.id;
 
-    if (!isHost && !isArtist) {
-      return reply.status(403).send({ error: 'Forbidden' });
-    }
+    if (!isHost && !isArtist) return sendError(reply, 403, 'FORBIDDEN');
 
     const conversation = await prisma.conversation.upsert({
       where: {
@@ -68,9 +67,9 @@ export async function conversationRoutes(app: FastifyInstance) {
       const conversation = await prisma.conversation.findUnique({
         where: { id: request.params.id },
       });
-      if (!conversation) return reply.status(404).send({ error: 'Conversation not found' });
+      if (!conversation) return sendError(reply, 404, 'CONVERSATION_NOT_FOUND');
       if (conversation.hostId !== user.id && conversation.artistId !== user.id) {
-        return reply.status(403).send({ error: 'Forbidden' });
+        return sendError(reply, 403, 'FORBIDDEN');
       }
 
       return prisma.message.findMany({
@@ -90,9 +89,9 @@ export async function conversationRoutes(app: FastifyInstance) {
       const conversation = await prisma.conversation.findUnique({
         where: { id: request.params.id },
       });
-      if (!conversation) return reply.status(404).send({ error: 'Conversation not found' });
+      if (!conversation) return sendError(reply, 404, 'CONVERSATION_NOT_FOUND');
       if (conversation.hostId !== user.id && conversation.artistId !== user.id) {
-        return reply.status(403).send({ error: 'Forbidden' });
+        return sendError(reply, 403, 'FORBIDDEN');
       }
 
       const message = await prisma.$transaction(async (tx) => {

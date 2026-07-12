@@ -18,9 +18,6 @@ export function Layout() {
 
   const navItems = (
     <>
-      <NavLink to="/" className={navLinkClass} end onClick={closeMobile}>
-        Accueil
-      </NavLink>
       {user && (
         <>
           <NavLink to="/dashboard" className={navLinkClass} onClick={closeMobile}>

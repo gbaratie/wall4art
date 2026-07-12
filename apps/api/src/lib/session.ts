@@ -2,6 +2,7 @@ import type { FastifyRequest } from 'fastify';
 import { fromNodeHeaders } from 'better-auth/node';
 import { auth } from './auth.js';
 import { prisma } from './prisma.js';
+import { httpError } from './errors.js';
 import type { UserRole } from '@prisma/client';
 
 export type AuthUser = {
@@ -36,18 +37,10 @@ export function hasRole(user: AuthUser, role: UserRole): boolean {
 }
 
 export function requireAuth(user: AuthUser | null): AuthUser {
-  if (!user) {
-    const error = new Error('Unauthorized');
-    (error as Error & { statusCode: number }).statusCode = 401;
-    throw error;
-  }
+  if (!user) throw httpError(401, 'UNAUTHORIZED');
   return user;
 }
 
 export function requireRole(user: AuthUser, role: UserRole): void {
-  if (!hasRole(user, role)) {
-    const error = new Error('Forbidden');
-    (error as Error & { statusCode: number }).statusCode = 403;
-    throw error;
-  }
+  if (!hasRole(user, role)) throw httpError(403, 'FORBIDDEN');
 }
